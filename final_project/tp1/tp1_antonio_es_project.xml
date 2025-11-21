@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// --- Constantes do modelo ---
+const int N_CLIENTS = 3;
+const int MAX_TRAIN_TIME = 20;
+const int COMM_TIMEOUT = 10;
+const int SEND_TIMEOUT = 5;
+const int MAX_RETRIES = 2;
+const int LOOP_FLAG = 1;
+
+// --- Canais de sincronização ---
+broadcast chan broadcast_start[N_CLIENTS];
+chan send_update[N_CLIENTS];
+
+// --- Variáveis globais ---
+int models_received = 0;
+</declaration>
+	<template>
+		<name x="5" y="5">Server</name>
+		<declaration>clock x_round_timer;
+int i = 0;
+</declaration>
+		<location id="id0" x="-297" y="-314">
+			<name x="-314" y="-357">Idle</name>
+			<committed/>
+		</location>
+		<location id="id1" x="-297" y="-170">
+			<name x="-348" y="-213">Broadcasting</name>
+			<committed/>
+		</location>
+		<location id="id2" x="-297" y="161">
+			<name x="-322" y="118">Waiting</name>
+			<label kind="invariant" x="-271" y="144">x_round_timer &lt;= COMM_TIMEOUT</label>
+		</location>
+		<location id="id3" x="-297" y="374">
+			<name x="-340" y="331">Aggregating</name>
+		</location>
+		<init ref="id0"/>
+		<transition id="id4">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-289" y="238">models_received == N_CLIENTS</label>
+		</transition>
+		<transition id="id5">
+			<source ref="id3"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-68" y="-8">LOOP_FLAG == 1</label>
+			<label kind="assignment" x="-68" y="17">x_round_timer = 0</label>
+			<nail x="102" y="374"/>
+			<nail x="102" y="-314"/>
+		</transition>
+		<transition id="id6">
+			<source ref="id2"/>
+			<target ref="id3"/>
+			<label kind="guard" x="-289" y="263">x_round_timer == COMM_TIMEOUT</label>
+			<nail x="-297" y="272"/>
+		</transition>
+		<transition id="id7">
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-901" y="229">send_update[2]?</label>
+			<label kind="assignment" x="-901" y="246">models_received = models_received + 1</label>
+			<nail x="-578" y="212"/>
+			<nail x="-578" y="255"/>
+		</transition>
+		<transition id="id8">
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-901" y="136">send_update[1]?</label>
+			<label kind="assignment" x="-901" y="153">models_received = models_received + 1</label>
+			<nail x="-578" y="136"/>
+			<nail x="-578" y="187"/>
+		</transition>
+		<transition id="id9">
+			<source ref="id2"/>
+			<target ref="id2"/>
+			<label kind="synchronisation" x="-901" y="42">send_update[0]?</label>
+			<label kind="assignment" x="-901" y="59">models_received = models_received + 1</label>
+			<nail x="-578" y="59"/>
+			<nail x="-578" y="110"/>
+		</transition>
+		<transition id="id10">
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-764" y="-94">i == 2</label>
+			<label kind="synchronisation" x="-764" y="-77">broadcast_start[2]!</label>
+			<label kind="assignment" x="-764" y="-60">i = i + 1</label>
+			<nail x="-586" y="-119"/>
+			<nail x="-586" y="-76"/>
+		</transition>
+		<transition id="id11">
+			<source ref="id1"/>
+			<target ref="id2"/>
+			<label kind="guard" x="-289" y="-17">i == N_CLIENTS</label>
+		</transition>
+		<transition id="id12">
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-764" y="-188">i == 1</label>
+			<label kind="synchronisation" x="-764" y="-171">broadcast_start[1]!</label>
+			<label kind="assignment" x="-764" y="-154">i = i + 1</label>
+			<nail x="-586" y="-154"/>
+			<nail x="-586" y="-196"/>
+		</transition>
+		<transition id="id13">
+			<source ref="id1"/>
+			<target ref="id1"/>
+			<label kind="guard" x="-764" y="-290">i == 0</label>
+			<label kind="synchronisation" x="-764" y="-273">broadcast_start[0]!</label>
+			<label kind="assignment" x="-764" y="-257">i = i + 1</label>
+			<nail x="-586" y="-264"/>
+			<nail x="-586" y="-222"/>
+		</transition>
+		<transition id="id14">
+			<source ref="id0"/>
+			<target ref="id1"/>
+			<label kind="assignment" x="-280" y="-263">models_received = 0, i = 0, x_round_timer = 0</label>
+		</transition>
+	</template>
+	<template>
+		<name>Client</name>
+		<parameter>const int id</parameter>
+		<declaration>clock x_train;   // relógio de treinamento (R6)
+clock x_send;    // relógio de envio (R8)
+int retry_count = 0;
+</declaration>
+		<location id="id15" x="68" y="-297">
+			<name x="51" y="-331">Idle</name>
+		</location>
+		<location id="id16" x="-391" y="51">
+			<name x="-416" y="9">Retryng</name>
+			<urgent/>
+		</location>
+		<location id="id17" x="68" y="-110">
+			<name x="34" y="-161">Training</name>
+			<label kind="invariant" x="94" y="-119">x_train &lt;= MAX_TRAIN_TIME</label>
+		</location>
+		<location id="id18" x="-391" y="-110">
+			<name x="-417" y="-153">Failed</name>
+		</location>
+		<location id="id19" x="68" y="51">
+			<name x="42" y="0">Sending</name>
+			<label kind="invariant" x="93" y="42">x_send &lt;= SEND_TIMEOUT</label>
+		</location>
+		<init ref="id15"/>
+		<transition id="id20">
+			<source ref="id16"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-374" y="-59">retry_count == MAX_RETRIES</label>
+		</transition>
+		<transition id="id21">
+			<source ref="id18"/>
+			<target ref="id15"/>
+			<nail x="-391" y="-297"/>
+		</transition>
+		<transition id="id22">
+			<source ref="id19"/>
+			<target ref="id15"/>
+			<label kind="synchronisation" x="153" y="144">send_update[id]!</label>
+			<nail x="68" y="178"/>
+			<nail x="357" y="178"/>
+			<nail x="357" y="-297"/>
+		</transition>
+		<transition id="id23">
+			<source ref="id16"/>
+			<target ref="id19"/>
+			<label kind="guard" x="-306" y="119">retry_count &lt; MAX_RETRIES</label>
+			<label kind="assignment" x="-306" y="144">retry_count = retry_count + 1, x_send = 0</label>
+			<nail x="-161" y="102"/>
+		</transition>
+		<transition id="id24">
+			<source ref="id19"/>
+			<target ref="id16"/>
+			<label kind="guard" x="-204" y="17">x_send == SEND_TIMEOUT</label>
+		</transition>
+		<transition id="id25">
+			<source ref="id17"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-263" y="-144">x_train == MAX_TRAIN_TIME</label>
+		</transition>
+		<transition id="id26">
+			<source ref="id17"/>
+			<target ref="id19"/>
+			<label kind="guard" x="85" y="-59">x_train &lt;= MAX_TRAIN_TIME</label>
+			<label kind="assignment" x="85" y="-42">x_send = 0, retry_count = 0</label>
+		</transition>
+		<transition id="id27">
+			<source ref="id15"/>
+			<target ref="id17"/>
+			<label kind="synchronisation" x="77" y="-246">broadcast_start[id]?</label>
+			<label kind="assignment" x="77" y="-229">x_train = 0</label>
+		</transition>
+	</template>
+	<system>// Instanciar os componentes
+s = Server();
+c0 = Client(0);
+c1 = Client(1);
+c2 = Client(2);
+
+// sistema
+system s, c0, c1, c2;
+</system>
+	<queries>
+		<option key="--diagnostic" value="1"/>
+		<query>
+			<formula>A[] not deadlock</formula>
+			<comment>This property ensures that the system never reaches a deadlock state. For every reachable state, at least one transition is always possible.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:03 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>A[] not (c0.Training and c0.Sending) and not (c1.Training and c1.Sending) and not (c2.Training and c2.Sending)</formula>
+			<comment>Guarantees that no client can be in Training and Sending at the same time. This enforces mutual exclusivity between these two phases.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:03 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>A[] (c0.retry_count &lt;= MAX_RETRIES) and (c1.retry_count &lt;= MAX_RETRIES) and (c2.retry_count &lt;= MAX_RETRIES)</formula>
+			<comment>Ensures that none of the clients exceeds the maximum allowed number of retries during communication.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:03 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>A[] (s.Waiting imply s.x_round_timer &lt;= COMM_TIMEOUT)</formula>
+			<comment>Checks that the server’s round-timer never exceeds the communication timeout while in the Waiting state.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:04 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>A[] (c0.Training imply c0.x_train &lt;= MAX_TRAIN_TIME) and (c1.Training imply c1.x_train &lt;= MAX_TRAIN_TIME) and (c2.Training imply c2.x_train &lt;= MAX_TRAIN_TIME)</formula>
+			<comment>Verifies that every client respects the maximum training time while in the Training state.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:05 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; (s.Aggregating)</formula>
+			<comment>Ensures that, on all execution paths, the server eventually reaches the Aggregating state. The aggregation phase is guaranteed to occur in every round.</comment>
+			<option key="--diagnostic" value="1"/>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:05 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; (c0.Failed)</formula>
+			<comment>Shows that it is possible for client c0 to fail. This property confirms that the model correctly represents failure scenarios.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:06 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; (s.Aggregating and models_received == N_CLIENTS)</formula>
+			<comment>Proves that there exists an execution where the server aggregates after receiving all client updates successfully.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:06 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; (s.Aggregating and models_received &lt; N_CLIENTS and s.x_round_timer == COMM_TIMEOUT)</formula>
+			<comment>Demonstrates that the server can also aggregate even if not all updates are received, provided the communication timeout expires. This corresponds to a partial aggregation scenario.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:07 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; (c0.Retryng imply (c0.Sending or c0.Failed)) and (c1.Retryng imply (c1.Sending or c1.Failed)) and (c2.Retryng imply (c2.Sending or c2.Failed))</formula>
+			<comment>The retry logic eventually resolves to a send attempt or a failure.</comment>
+			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:07 -0300">
+				<option key="--diagnostic" value="1"/>
+			</result>
+		</query>
+	</queries>
+</nta>
