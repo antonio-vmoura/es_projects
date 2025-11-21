@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+int[1,2] x = 1;
+
+bool b1 = false, b2=false;
+int y = 1;
+
+int __reach__ = 0;</declaration>
+	<template>
+		<name x="5" y="5">peterson_pg1</name>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id0" x="-93" y="42">
+			<name x="-76" y="34">crit1</name>
+		</location>
+		<location id="id1" x="-93" y="-42">
+			<name x="-76" y="-51">wait1</name>
+		</location>
+		<location id="id2" x="-93" y="-119">
+			<name x="-103" y="-153">noncrit1</name>
+		</location>
+		<init ref="id2"/>
+		<transition id="id3">
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="assignment" x="-229" y="-51">b1 = false</label>
+			<nail x="-161" y="42"/>
+			<nail x="-161" y="-119"/>
+		</transition>
+		<transition id="id4">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-85" y="-17">(x == 1 || b2 == false)</label>
+		</transition>
+		<transition id="id5">
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="assignment" x="-85" y="-102">b1 = true, x = 2</label>
+		</transition>
+	</template>
+	<template>
+		<name>peterson_pg2</name>
+		<location id="id6" x="-76" y="42">
+			<name x="-59" y="34">crit2</name>
+		</location>
+		<location id="id7" x="-76" y="-119">
+			<name x="-86" y="-153">noncrit2</name>
+		</location>
+		<location id="id8" x="-76" y="-42">
+			<name x="-59" y="-51">wait2</name>
+		</location>
+		<init ref="id7"/>
+		<transition id="id9">
+			<source ref="id6"/>
+			<target ref="id7"/>
+			<label kind="assignment" x="-212" y="-51">b2 = false</label>
+			<nail x="-144" y="42"/>
+			<nail x="-144" y="-119"/>
+		</transition>
+		<transition id="id10">
+			<source ref="id8"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-68" y="-17">(x == 2 || b1 == false)</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id7"/>
+			<target ref="id8"/>
+			<label kind="assignment" x="-68" y="-102">b2 = true, x = 1</label>
+		</transition>
+	</template>
+	<template>
+		<name x="5" y="5">semaphore_pg1</name>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id12" x="-93" y="42">
+			<name x="-76" y="34">crit1</name>
+		</location>
+		<location id="id13" x="-93" y="-42">
+			<name x="-76" y="-51">wait1</name>
+		</location>
+		<location id="id14" x="-93" y="-119">
+			<name x="-103" y="-153">noncrit1</name>
+		</location>
+		<init ref="id14"/>
+		<transition id="id15">
+			<source ref="id12"/>
+			<target ref="id14"/>
+			<label kind="assignment" x="-195" y="-51">y = y + 1</label>
+			<nail x="-161" y="42"/>
+			<nail x="-161" y="-119"/>
+		</transition>
+		<transition id="id16">
+			<source ref="id13"/>
+			<target ref="id12"/>
+			<label kind="guard" x="-85" y="-17">y &gt; 0</label>
+			<label kind="assignment" x="-93" y="0">y = y - 1</label>
+		</transition>
+		<transition id="id17">
+			<source ref="id14"/>
+			<target ref="id13"/>
+		</transition>
+	</template>
+	<template>
+		<name>semaphore_pg2</name>
+		<location id="id18" x="-76" y="42">
+			<name x="-59" y="34">crit2</name>
+		</location>
+		<location id="id19" x="-76" y="-119">
+			<name x="-86" y="-153">noncrit2</name>
+		</location>
+		<location id="id20" x="-76" y="-42">
+			<name x="-59" y="-51">wait2</name>
+		</location>
+		<init ref="id19"/>
+		<transition id="id21">
+			<source ref="id18"/>
+			<target ref="id19"/>
+			<label kind="assignment" x="-178" y="-51">y = y + 1</label>
+			<nail x="-144" y="42"/>
+			<nail x="-144" y="-119"/>
+		</transition>
+		<transition id="id22">
+			<source ref="id20"/>
+			<target ref="id18"/>
+			<label kind="guard" x="-68" y="-17">y &gt; 0</label>
+			<label kind="assignment" x="-76" y="0">y = y - 1</label>
+		</transition>
+		<transition id="id23">
+			<source ref="id19"/>
+			<target ref="id20"/>
+		</transition>
+	</template>
+	<system>// Instanciando os templates
+Peterson1 = peterson_pg1();
+Peterson2 = peterson_pg2();
+
+Semaphore1 = semaphore_pg1();
+Semaphore2 = semaphore_pg2();
+
+// Listando no sistema
+system Peterson1, Peterson2, Semaphore1, Semaphore2;
+</system>
+	<queries>
+		<query>
+			<formula/>
+			<comment/>
+		</query>
+	</queries>
+</nta>

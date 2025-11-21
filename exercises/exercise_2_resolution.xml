@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE nta PUBLIC '-//Uppaal Team//DTD Flat System 1.6//EN' 'http://www.it.uu.se/research/group/darts/uppaal/flat-1_6.dtd'>
+<nta>
+	<declaration>// Place global declarations here.
+const int N = 2; // Numero de processos 
+
+typedef int[1,N] id_t; // Define um tipo para o ID do processo (de 1 a N)
+
+bool b[id_t] = {false, false}; // Array de flags 'b' para cada processo
+
+int[1,N] turn = 1; // Variável 'turn' do algoritmo de Peterson
+
+int[1,N] arbiter_turn = 1; // Variável de controle do Árbitro para dar a vez
+</declaration>
+	<template>
+		<name x="5" y="5">Process1</name>
+		<declaration>// Place local declarations here.</declaration>
+		<location id="id0" x="-93" y="42">
+			<name x="-76" y="34">crit1</name>
+		</location>
+		<location id="id1" x="-93" y="-42">
+			<name x="-76" y="-51">wait1</name>
+			<committed/>
+		</location>
+		<location id="id2" x="-93" y="-119">
+			<name x="-103" y="-153">noncrit1</name>
+		</location>
+		<init ref="id2"/>
+		<transition id="id3">
+			<source ref="id0"/>
+			<target ref="id2"/>
+			<label kind="assignment" x="-229" y="-51">b[1] = false</label>
+			<nail x="-161" y="42"/>
+			<nail x="-161" y="-119"/>
+		</transition>
+		<transition id="id4">
+			<source ref="id1"/>
+			<target ref="id0"/>
+			<label kind="guard" x="-85" y="-17">arbiter_turn == 1 &amp;&amp; (turn == 1 || b[(1 % N) + 1] == false)</label>
+		</transition>
+		<transition id="id5">
+			<source ref="id2"/>
+			<target ref="id1"/>
+			<label kind="assignment" x="-85" y="-102">b[1] = true,
+turn = (1 % N) + 1</label>
+		</transition>
+	</template>
+	<template>
+		<name>Process2</name>
+		<location id="id6" x="-93" y="42">
+			<name x="-76" y="34">crit2</name>
+		</location>
+		<location id="id7" x="-93" y="-42">
+			<name x="-76" y="-51">wait2</name>
+			<committed/>
+		</location>
+		<location id="id8" x="-93" y="-119">
+			<name x="-103" y="-153">noncrit2</name>
+		</location>
+		<init ref="id8"/>
+		<transition id="id9">
+			<source ref="id6"/>
+			<target ref="id8"/>
+			<label kind="assignment" x="-229" y="-51">b[2] = false</label>
+			<nail x="-161" y="42"/>
+			<nail x="-161" y="-119"/>
+		</transition>
+		<transition id="id10">
+			<source ref="id7"/>
+			<target ref="id6"/>
+			<label kind="guard" x="-85" y="-17">arbiter_turn == 2 &amp;&amp; (turn == 2 || b[(2 % N) + 1] == false)</label>
+		</transition>
+		<transition id="id11">
+			<source ref="id8"/>
+			<target ref="id7"/>
+			<label kind="assignment" x="-85" y="-102">b[2] = true,
+turn = (2 % N) + 1</label>
+		</transition>
+	</template>
+	<template>
+		<name>Arbiter</name>
+		<location id="id12" x="-365" y="-212">
+			<name x="-375" y="-246">Arbiter</name>
+			<committed/>
+		</location>
+		<init ref="id12"/>
+		<transition id="id13">
+			<source ref="id12"/>
+			<target ref="id12"/>
+			<label kind="assignment" x="-527" y="-331">arbiter_turn = (arbiter_turn % N) + 1</label>
+			<nail x="-433" y="-297"/>
+			<nail x="-314" y="-297"/>
+		</transition>
+	</template>
+	<system>// Place template instantiations here.
+Proc1 = Process1();
+Proc2 = Process2();
+Arb = Arbiter();
+
+system Proc1, Proc2, Arb;
+    </system>
+	<queries>
+		<query>
+			<formula>A[] (!Proc1.crit1 or !Proc2.crit2)
+			</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-10-17 12:28:26 -0300">
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; (Proc2.wait2 imply Proc2.crit2)
+			</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-10-17 12:28:26 -0300">
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt;(Proc2.crit2 imply Proc1.crit1)
+			</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-10-17 12:28:26 -0300">
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt;(Proc1.crit1 imply Proc2.crit2)
+			</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-10-17 12:28:26 -0300">
+			</result>
+		</query>
+		<query>
+			<formula>A&lt;&gt; (Proc1.wait1 imply Proc1.crit1)
+			</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-10-17 12:28:26 -0300">
+			</result>
+		</query>
+		<query>
+			<formula>Proc2.wait2 --&gt; (Proc2.crit2)
+			</formula>
+			<comment/>
+			<result outcome="success" type="quality" timestamp="2025-10-17 12:28:26 -0300">
+			</result>
+		</query>
+		<query>
+			<formula>Proc1.wait1 --&gt; Proc1.crit1
+			</formula>
+			<comment>A very interesting way to express fairness in UPPAAL is tricky: it will only work if we have the locations declared as "C"ommitted!
+			</comment>
+			<result outcome="success" type="quality" timestamp="2025-10-17 12:28:26 -0300">
+			</result>
+		</query>
+		<query>
+			<formula>E&lt;&gt; (Proc1.crit1 and Proc2.crit2)
+			</formula>
+			<comment>There is a path that eventually both crit1 and crit2 are reached at the same time. We do not want this situation to occur as this would violate the mutual exclusion (safety) property.
+			</comment>
+			<result outcome="failure" type="quality" timestamp="2025-10-17 12:28:26 -0300">
+			</result>
+		</query>
+	</queries>
+</nta>
