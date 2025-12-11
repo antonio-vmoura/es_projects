@@ -1,3 +1,3 @@
-# Projetos de ES
+# SE Projects
 
-Projetos desenvolvidos para disciplina de Engenharia de Software (ES).
+Projects developed for the Software Engineering 1 course at PPGI/UnB.
