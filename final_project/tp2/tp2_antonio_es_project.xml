@@ -3,8 +3,8 @@
 <nta>
 	<declaration>// --- Constantes do modelo ---
 const int N_CLIENTS = 3;
-const int MAX_TRAIN_TIME = 20;
-const int COMM_TIMEOUT = 10;
+const int MAX_TRAIN_TIME = 10;
+const int COMM_TIMEOUT = 20;
 const int SEND_TIMEOUT = 5;
 const int MAX_RETRIES = 2;
 const int LOOP_FLAG = 1;
@@ -121,8 +121,8 @@ int i = 0;
 	<template>
 		<name>Client</name>
 		<parameter>const int id</parameter>
-		<declaration>clock x_train;   // relógio de treinamento (R6)
-clock x_send;    // relógio de envio (R8)
+		<declaration>clock x_train;
+clock x_send;
 int retry_count = 0;
 </declaration>
 		<location id="id15" x="68" y="-297">
@@ -206,35 +206,35 @@ system s, c0, c1, c2;
 		<query>
 			<formula>A[] not deadlock</formula>
 			<comment>This property ensures that the system never reaches a deadlock state. For every reachable state, at least one transition is always possible.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:03 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:14 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] not (c0.Training and c0.Sending) and not (c1.Training and c1.Sending) and not (c2.Training and c2.Sending)</formula>
 			<comment>Guarantees that no client can be in Training and Sending at the same time. This enforces mutual exclusivity between these two phases.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:03 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:14 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] (c0.retry_count &lt;= MAX_RETRIES) and (c1.retry_count &lt;= MAX_RETRIES) and (c2.retry_count &lt;= MAX_RETRIES)</formula>
 			<comment>Ensures that none of the clients exceeds the maximum allowed number of retries during communication.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:03 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:14 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] (s.Waiting imply s.x_round_timer &lt;= COMM_TIMEOUT)</formula>
 			<comment>Checks that the server’s round-timer never exceeds the communication timeout while in the Waiting state.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:04 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:14 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>A[] (c0.Training imply c0.x_train &lt;= MAX_TRAIN_TIME) and (c1.Training imply c1.x_train &lt;= MAX_TRAIN_TIME) and (c2.Training imply c2.x_train &lt;= MAX_TRAIN_TIME)</formula>
 			<comment>Verifies that every client respects the maximum training time while in the Training state.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:05 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:14 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
@@ -242,35 +242,35 @@ system s, c0, c1, c2;
 			<formula>A&lt;&gt; (s.Aggregating)</formula>
 			<comment>Ensures that, on all execution paths, the server eventually reaches the Aggregating state. The aggregation phase is guaranteed to occur in every round.</comment>
 			<option key="--diagnostic" value="1"/>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:05 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:14 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; (c0.Failed)</formula>
 			<comment>Shows that it is possible for client c0 to fail. This property confirms that the model correctly represents failure scenarios.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:06 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:15 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; (s.Aggregating and models_received == N_CLIENTS)</formula>
 			<comment>Proves that there exists an execution where the server aggregates after receiving all client updates successfully.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:06 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:15 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; (s.Aggregating and models_received &lt; N_CLIENTS and s.x_round_timer == COMM_TIMEOUT)</formula>
 			<comment>Demonstrates that the server can also aggregate even if not all updates are received, provided the communication timeout expires. This corresponds to a partial aggregation scenario.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:07 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:15 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
 		<query>
 			<formula>E&lt;&gt; (c0.Retryng imply (c0.Sending or c0.Failed)) and (c1.Retryng imply (c1.Sending or c1.Failed)) and (c2.Retryng imply (c2.Sending or c2.Failed))</formula>
 			<comment>The retry logic eventually resolves to a send attempt or a failure.</comment>
-			<result outcome="success" type="quality" timestamp="2025-11-19 02:06:07 -0300">
+			<result outcome="success" type="quality" timestamp="2025-12-11 10:08:15 -0300">
 				<option key="--diagnostic" value="1"/>
 			</result>
 		</query>
